@@ -1,7 +1,8 @@
 module Gchart
   class Chart
-    attr_reader :horizontal, :overlapped, :grouped, :legend, :labels
-    attr_accessor :size, :width, :height
+    attr_reader :horizontal, :overlapped, :grouped, :legend, :thickness
+    attr_accessor :size, :width, :height, :labels
+    attr_reader :params
 
     def initialize(options = {})
       # Start with theme defaults if a theme is set
@@ -12,13 +13,20 @@ module Gchart
       options[:filename] ||= default_filename
       options.delete(:format)
 
-      @legend = options.delete(:legend)
-      self.size = options.delete(:size) if options[:size]
-      @width = options.delete(:width) if options[:width]
-      @height = options.delete(:height) if options[:height]
+      @width             = options.delete(:width) if options[:width]
+      @height            = options.delete(:height) if options[:height]
+      self.size          = options.delete(:size) if options[:size]
+      params[:chdl]      = options.delete(:legend)
+      params[:chs]       = self.size
+      params[:chl]       = options.delete(:labels) if options[:labels]
+      params[:chls]      = options.delete(:thickness) if options[:thickness]
+      params[:chm]       = options.delete(:new_markers) if options[:new_markers]
+      params[:chg]       = options.delete(:grid_lines) if options[:grid_lines]
+      params[:chtm]       = options.delete(:geographical_area) if options[:geographical_area]
       set_orientation(options.delete(:orientation))
       set_overlapped(options.delete(:overlapped))
       set_grouped(options.delete(:grouped))
+      params[:cht]       = type
 
       #update map_colors to become bar_colors
       options.update(:bar_colors => options[:map_colors]) if options.has_key?(:map_colors)
@@ -43,29 +51,14 @@ module Gchart
       @height ||= 200
     end
 
+    def params
+      @params ||={}
+    end
+
     # Defines the Graph size using the following format:
     # width X height
     def size=(size='300x200')
       self.width, self.height = size.split("x").map { |dimension| dimension.to_i }
-    end
-
-    def set_size
-      "chs=#{size}"
-    end
-
-    # A chart can have one or many legends.
-    # Gchart::Line.new(:legend => 'label')
-    # or
-    # Gchart::Line.new(:legend => ['first label', 'last label'])
-    def set_legend
-      if legend.is_a?(Array)
-        "chdl=#{@legend.map{|label| "#{CGI::escape(label.to_s)}"}.join('|')}"
-      else
-        "chdl=#{legend}"
-      end
-    end
-
-    def set_labels
     end
 
     private

@@ -8,15 +8,6 @@ describe Gchart::Meter do
         subject.type.should == 'gom'
       end
     end
-
-    describe :set_legend do
-      it 'should assign legend to labels' do
-        legend =  described_class.new(:legend => 'I am legend')
-        legend.should_receive(:set_labels).once
-        legend.set_legend
-        legend.labels.should == 'I am legend'
-      end
-    end
   end
 
   it "should be able to generate a Google-O-Meter" do
@@ -41,8 +32,12 @@ describe Gchart::Meter do
       described_class.new(:bg => {:color => 'efefef', :type => 'solid'}).draw.should include("chf=bg,s,efefef")
     end
 
-    it "should be able to set labels by using the legend or labesl accessor" do
+    it "should be able to set labels by using the labels accessor" do
       described_class.new(:title => @title, :labels => @legend, :data => @data).draw.should include("chl=#{@jstized_legend}")
+    end
+
+    it "should be able to set labels by using the legend accessor" do
+      described_class.new(:title => @title, :legend => @legend, :data => @data).draw.should include("chl=#{@jstized_legend}")
     end
   end
 end

@@ -1,12 +1,12 @@
 module Gchart
   class Meter < Chart
-    def type
-      'gom'
+    def initialize(options={})
+      super
+      params[:chl] ||= params[:chdl]
     end
 
-    def set_legend
-      @labels = legend
-      set_labels
+    def type
+      'gom'
     end
   end
 end
