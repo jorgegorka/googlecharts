@@ -65,7 +65,7 @@ module Gchart
     def initialize(options={}, origin='')
       @origin = origin
       @link_builder  = UrlBuilder.new(options.delete(:use_ssl))
-      @qy_builder = QueryBuilder.new
+      @qy_builder = QueryBuilder
 
       # Allow Gchart to take a theme too
       @theme = options[:theme]
@@ -300,10 +300,6 @@ module Gchart
       title_params
     end
 
-    def set_size
-      origin.set_size
-    end
-
     def set_data
       data = send("#{@encoding}_encoding")
       "chd=#{data}"
@@ -381,10 +377,6 @@ module Gchart
       end
     end
 
-    def set_legend
-      origin.set_legend
-    end
-
     def set_legend_position
       case @legend_position.to_s
       when /(bottom|b)$/
@@ -399,26 +391,6 @@ module Gchart
         "chdlp=r"
       when /(left|l)$/
         "chdlp=l"
-      end
-    end
-
-    def set_line_thickness
-      "chls=#{thickness}"
-    end
-
-    def set_line_markers
-      "chm=#{new_markers}"
-    end
-
-    def set_grid_lines
-      "chg=#{grid_lines}"
-    end
-
-    def set_labels
-      if labels.is_a?(Array)
-        "chl=#{@labels.map{|label| "#{CGI::escape(label.to_s)}"}.join('|')}"
-      else
-        "chl=#{@labels}"
       end
     end
 
@@ -466,37 +438,6 @@ module Gchart
         end
         [index, (min_value || min || 0), (max_value || max), step].compact.join(',')
       end.compact.join("|")
-    end
-
-    def set_geographical_area
-      "chtm=#{geographical_area}"
-    end
-
-    def set_type
-      'cht=' + case type.to_s
-      when 'line'
-        origin.type
-      when 'linexy'
-        origin.type
-      when 'pie3d'
-        origin.type
-      when 'pie'
-        origin.type
-      when 'venn'
-        origin.type
-      when 'scatter'
-        origin.type
-      when 'sparkline'
-        origin.type
-      when 'meter'
-        origin.type
-      when 'map'
-        origin.type
-      when 'radar'
-      when 'bar'
-        origin.type
-      end
-      #"r" + (curved? ? 's' : '')
     end
 
     def fill_type(type)
@@ -633,16 +574,10 @@ module Gchart
         case var.to_s
         when '@data'
           set_data unless data == []
-        when '@type'
-          set_type
         when '@title'
           set_title unless title.nil?
-        when '@labels'
-          set_labels unless labels.nil?
         when '@legend_position'
           set_legend_position unless legend_position.nil?
-        when '@thickness'
-          set_line_thickness
         when '@new_markers'
           set_line_markers
         when '@bg_color'
@@ -670,8 +605,7 @@ module Gchart
         end
       end.compact
 
-      query_params << set_size
-      query_params << set_legend
+      query_params << qy_builder.build(origin.params)
 
       query_params << set_axis_range
 
