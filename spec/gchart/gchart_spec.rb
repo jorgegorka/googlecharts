@@ -158,10 +158,6 @@ describe "generating a default Gchart" do
     url = Gchart::Line.new(:data => data, :axis_with_labels => 'x,y', :axis_labels => [((1..24).to_a << 1)], :max_value => 700).draw
     url.should include('chxr=0,85,700')
   end
-
-  it 'should generate different labels and legend' do
-    Gchart::Gchart.pie(:legend => %w(1 2 3), :labels=>%w(one two three)).should(include('chdl=1|2|3') && include('chl=one|two|three'))
-  end
 end
 
 describe "generating different type of charts" do
@@ -169,46 +165,6 @@ describe "generating different type of charts" do
   it "should be able to generate a line chart" do
     Gchart::Line.new.draw.should be_an_instance_of(String)
     Gchart::Line.new.draw.should include('cht=lc')
-  end
-
-  it "should be able to generate a sparkline chart" do
-    Gchart::Gchart.sparkline.should be_an_instance_of(String)
-    Gchart::Gchart.sparkline.should include('cht=ls')
-  end
-
-  it "should be able to generate a line xy chart" do
-    Gchart::Gchart.line_xy.should be_an_instance_of(String)
-    Gchart::Gchart.line_xy.should include('cht=lxy')
-  end
-
-  it "should be able to generate a scatter chart" do
-    Gchart::Gchart.scatter.should be_an_instance_of(String)
-    Gchart::Gchart.scatter.should include('cht=s')
-  end
-
-  it "should be able to generate a bar chart" do
-    Gchart::Bar.new.draw.should be_an_instance_of(String)
-    Gchart::Bar.new.draw.should include('cht=bvs')
-  end
-
-  it "should be able to generate a Venn diagram" do
-    Gchart::Gchart.venn.should be_an_instance_of(String)
-    Gchart::Gchart.venn.should include('cht=v')
-  end
-
-  it "should be able to generate a Pie Chart" do
-    Gchart::Gchart.pie.should be_an_instance_of(String)
-    Gchart::Gchart.pie.should include('cht=p')
-  end
-
-  it "should be able to generate a Google-O-Meter" do
-    Gchart::Gchart.meter.should be_an_instance_of(String)
-    Gchart::Gchart.meter.should include('cht=gom')
-  end
-
-  it "should be able to generate a map chart" do
-    Gchart::Gchart.map.should be_an_instance_of(String)
-    Gchart::Gchart.map.should include('cht=t')
   end
 
   it "should not support other types" do
@@ -336,143 +292,6 @@ describe "a line chart" do
 
   it "should be able to render a graph where all the data values are 0" do
     Gchart::Line.new(:data => [0, 0, 0]).draw.should include("chd=s:AAA")
-  end
-end
-
-describe "a sparkline chart" do
-
-  before(:each) do
-    @title = 'Chart Title'
-    @legend = ['first data set label', 'n data set label']
-    @jstized_legend = Gchart::Gchart.jstize(@legend.join('|'))
-    @data = [27,25,25,25,25,27,100,31,25,36,25,25,39,25,31,25,25,25,26,26,25,25,28,25,25,100,28,27,31,25,27,27,29,25,27,26,26,25,26,26,35,33,34,25,26,25,36,25,26,37,33,33,37,37,39,25,25,25,25]
-    @chart = Gchart::Gchart.sparkline(:title => @title, :data => @data, :legend => @legend)
-  end
-
-  it "should create a sparkline" do
-    @chart.should include('cht=ls')
-  end
-
-  it 'should be able have a chart title' do
-    @chart.should include("chtt=Chart+Title")
-  end
-
-  it "should be able to a custom color and size title" do
-     Gchart::Gchart.sparkline(:title => @title, :title_color => 'FF0000').should include('chts=FF0000')
-     Gchart::Gchart.sparkline(:title => @title, :title_size => '20').should include('chts=454545,20')
-  end
-
-  it "should be able to have multiple legends" do
-    @chart.should include(Gchart::Gchart.jstize("chdl=first+data+set+label|n+data+set+label"))
-  end
-
-  it "should be able to have one legend" do
-    chart = Gchart::Gchart.sparkline(:legend => 'legend label')
-    chart.should include("chdl=legend+label")
-  end
-
-  it "should be able to set the background fill" do
-    Gchart::Gchart.sparkline(:bg => 'efefef').should include("chf=bg,s,efefef")
-    Gchart::Gchart.sparkline(:bg => {:color => 'efefef', :type => 'solid'}).should include("chf=bg,s,efefef")
-
-    Gchart::Gchart.sparkline(:bg => {:color => 'efefef', :type => 'gradient'}).should include("chf=bg,lg,0,efefef,0,ffffff,1")
-    Gchart::Gchart.sparkline(:bg => {:color => 'efefef,0,ffffff,1', :type => 'gradient'}).should include("chf=bg,lg,0,efefef,0,ffffff,1")
-    Gchart::Gchart.sparkline(:bg => {:color => 'efefef', :type => 'gradient', :angle => 90}).should include("chf=bg,lg,90,efefef,0,ffffff,1")
-
-    Gchart::Gchart.sparkline(:bg => {:color => 'efefef', :type => 'stripes'}).should include("chf=bg,ls,90,efefef,0.2,ffffff,0.2")
-  end
-
-  it "should be able to set a graph fill" do
-    Gchart::Gchart.sparkline(:graph_bg => 'efefef').should include("chf=c,s,efefef")
-    Gchart::Gchart.sparkline(:graph_bg => {:color => 'efefef', :type => 'solid'}).should include("chf=c,s,efefef")
-    Gchart::Gchart.sparkline(:graph_bg => {:color => 'efefef', :type => 'gradient'}).should include("chf=c,lg,0,efefef,0,ffffff,1")
-    Gchart::Gchart.sparkline(:graph_bg => {:color => 'efefef,0,ffffff,1', :type => 'gradient'}).should include("chf=c,lg,0,efefef,0,ffffff,1")
-    Gchart::Gchart.sparkline(:graph_bg => {:color => 'efefef', :type => 'gradient', :angle => 90}).should include("chf=c,lg,90,efefef,0,ffffff,1")
-  end
-
-  it "should be able to set both a graph and a background fill" do
-    Gchart::Gchart.sparkline(:bg => 'efefef', :graph_bg => '76A4FB').should match(/chf=(bg,s,efefef\|c,s,76A4FB|c,s,76A4FB\|bg,s,efefef)/)
-  end
-
-  it "should be able to have different line colors" do
-    Gchart::Gchart.sparkline(:line_colors => 'efefef|00ffff').should include(Gchart::Gchart.jstize('chco=efefef|00ffff'))
-    Gchart::Gchart.sparkline(:line_color => 'efefef|00ffff').should include(Gchart::Gchart.jstize('chco=efefef|00ffff'))
-  end
-end
-
-describe "a 3d pie chart" do
-
-  before(:each) do
-    @title = 'Chart Title'
-    @legend = ['first data set label', 'n data set label']
-    @jstized_legend = Gchart::Gchart.jstize(@legend.join('|'))
-    @data = [12,8,40,15,5]
-    @chart = Gchart::Gchart.pie(:title => @title, :legend => @legend, :data => @data)
-  end
-
-  it "should create a pie" do
-    @chart.should include('cht=p')
-  end
-
-  it "should be able to be in 3d" do
-    Gchart::Gchart.pie_3d(:title => @title, :legend => @legend, :data => @data).should include('cht=p3')
-  end
-end
-
-describe "a google-o-meter" do
-
-  before(:each) do
-    @data = [70]
-    @legend = ['arrow points here']
-    @jstized_legend = Gchart::Gchart.jstize(@legend.join('|'))
-    @chart = Gchart::Gchart.meter(:data => @data)
-  end
-
-  it "should create a meter" do
-    @chart.should include('cht=gom')
-  end
-
-  it "should be able to set a solid background fill" do
-    Gchart::Gchart.meter(:bg => 'efefef').should include("chf=bg,s,efefef")
-    Gchart::Gchart.meter(:bg => {:color => 'efefef', :type => 'solid'}).should include("chf=bg,s,efefef")
-  end
-
-  it "should be able to set labels by using the legend or labesl accessor" do
-    Gchart::Gchart.meter(:title => @title, :labels => @legend, :data => @data).should include("chl=#{@jstized_legend}")
-    Gchart::Gchart.meter(:title => @title, :labels => @legend, :data => @data).should == Gchart::Gchart.meter(:title => @title, :legend => @legend, :data => @data)
-  end
-end
-
-describe "a map chart" do
-
-  before(:each) do
-    @data = [0,100,50,32]
-    @geographical_area = 'usa'
-    @map_colors = ['FFFFFF', 'FF0000', 'FFFF00', '00FF00']
-    @country_codes = ['MT', 'WY', "ID", 'SD']
-    @chart = Gchart::Gchart.map(:data => @data, :encoding => 'text', :size => '400x300',
-      :geographical_area => @geographical_area, :map_colors => @map_colors,
-      :country_codes => @country_codes)
-  end
-
-  it "should create a map" do
-    @chart.should include('cht=t')
-  end
-
-  it "should set the geographical area" do
-    @chart.should include('chtm=usa')
-  end
-
-  it "should set the map colors" do
-    @chart.should include('chco=FFFFFF,FF0000,FFFF00,00FF00')
-  end
-
-  it "should set the country/state codes" do
-    @chart.should include('chld=MTWYIDSD')
-  end
-
-  it "should set the chart data" do
-    @chart.should include('chd=t:0,100,50,32')
   end
 end
 
