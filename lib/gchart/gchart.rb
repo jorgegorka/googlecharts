@@ -28,8 +28,8 @@ module Gchart
     attr_reader   :link_builder
     attr_reader   :qy_builder
 
-    attr_accessor :title, :type, :curved, :horizontal, :grouped, :overlapped, :legend, :legend_position, :labels, :data, :encoding, :bar_colors,
-      :title_color, :title_size, :title_alignment, :custom, :axis_with_labels, :axis_labels, :bar_width_and_spacing, :id, :alt, :klass,
+    attr_accessor :legend_position, :data, :encoding, :bar_colors,
+      :custom, :axis_with_labels, :axis_labels, :bar_width_and_spacing, :id, :alt, :klass,
       :range_markers, :geographical_area, :map_colors, :country_codes, :axis_range, :filename, :min, :max, :colors, :usemap
 
     attr_accessor :bg_type, :bg_color, :bg_angle, :chart_type, :chart_color, :chart_angle, :axis_range, :thickness, :new_markers, :grid_lines
@@ -111,8 +111,7 @@ module Gchart
     end
 
     def dimensions
-      # TODO: maybe others?
-      [:line_xy, :scatter].include?(type) ? 2 : 1
+      [:linexy, :scatter].include?(origin.type) ? 2 : 1
     end
 
     # Sets the orientation of a bar graph
@@ -169,13 +168,13 @@ module Gchart
         mds[:min_value] ||= min_value
         mds[:max_value] ||= max_value
 
-        if mds_index == 0 && type.to_s == 'bar'
+        if mds_index == 0 && origin.type.to_s == 'bar'
           # TODO: unless you specify a zero line (using chp or chds),
           #       the min_value of a bar chart is always 0.
           #mds[:min_value] ||= mds[:data].first.to_a.compact.min
           mds[:min_value] ||= 0
         end
-        if (mds_index == 0 && type.to_s == 'bar' && 
+        if (mds_index == 0 && origin.type.to_s == 'bar' &&
             !grouped && mds[:data].first.is_a?(Array))
           totals = []
           mds[:data].each do |l|
@@ -202,7 +201,7 @@ module Gchart
       unless axis_range
         @calculated_axis_range = true
         @axis_range = ds.map{|mds| [mds[:min_value], mds[:max_value]]}
-        if dimensions == 1 && (type.to_s != 'bar' || horizontal)
+        if dimensions == 1 && (origin.type.to_s != 'bar' || horizontal)
           tmp = axis_range.fetch(0, [])
           @axis_range[0] = axis_range.fetch(1, [])
           @axis_range[1] = tmp
@@ -212,7 +211,7 @@ module Gchart
 
     def dataset
       if @dataset
-        @dataset 
+        @dataset
       else
         @dataset = convert_dataset(data || [])
         full_data_range(@dataset)   # unless axis_range
@@ -268,7 +267,7 @@ module Gchart
       image += " width=\"#{origin.width}\""
       image += " height=\"#{origin.height}\""
       image += " alt=\"#{alt}\""
-      image += " title=\"#{title}\"" if title
+      image += " title=\"#{origin.params[:chtt]}\"" if origin.params[:chtt]
       image += " usemap=\"#{usemap}\"" if usemap
       image += " />"
     end
@@ -289,16 +288,6 @@ module Gchart
     end
 
     private
-
-    # The title size cannot be set without specifying a color.
-    # A dark key will be used for the title color if no color is specified 
-    def set_title
-      title_params = "chtt=#{title}".gsub(/\|/,"\n")
-      unless (title_color.nil? && title_size.nil? && title_alignment.nil?)
-        title_params << "&chts=" + (color, size, alignment = (title_color || '454545'), title_size, (title_alignment.to_s[0,1] || 'c')).compact.join(',')
-      end
-      title_params
-    end
 
     def set_data
       data = send("#{@encoding}_encoding")
@@ -574,8 +563,6 @@ module Gchart
         case var.to_s
         when '@data'
           set_data unless data == []
-        when '@title'
-          set_title unless title.nil?
         when '@legend_position'
           set_legend_position unless legend_position.nil?
         when '@new_markers'

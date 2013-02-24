@@ -9,7 +9,5 @@ module Gchart
       alias_method :line_colors=, :bar_colors=
       alias_method :line_color=, :bar_colors=
       alias_method :slice_colors=, :bar_colors=
-      alias_method :horizontal?, :horizontal
-    alias_method :curved?, :curved
   end
 end
