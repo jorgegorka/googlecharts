@@ -7,15 +7,13 @@
 The goal of this Gem is to make the creation of Google Charts a simple and easy task.
 
     require 'googlecharts'
-    Gchart.line(  :size => '200x300',
+
+    new_graph = Gchart.Line.new(  :size => '200x300',
                   :title => "example title",
                   :bg => 'efefef',
                   :legend => ['first data set label', 'second data set label'],
                   :data => [10, 30, 120, 45, 72])
-
-This gem is fully tested using Rspec, check the rspec folder for more examples.
-
-See at the bottom of this file who reported using this gem.
+     new_graph.draw
 
 Chart Type
 -------------
