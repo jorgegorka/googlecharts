@@ -1,7 +1,8 @@
 require 'spec_helper'
 
 describe Gchart::Chart do
-  subject { described_class.new }
+  # This should be a shared example eventually
+  subject { Gchart::Line.new }
 
   describe :methods do
     describe :width do
@@ -31,16 +32,6 @@ describe Gchart::Chart do
       end
       it "should have a default size" do
         subject.size.should == '300x200'
-      end
-      it 'should format size to param' do
-        subject.set_size.should == 'chs=300x200'
-      end
-    end
-    describe :legend do
-      context 'chart is not a google-o-meter' do
-        context 'legend is a sting' do
-          described_class.new.set_legend.should == 'chdl='
-        end
       end
     end
   end
