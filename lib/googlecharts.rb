@@ -13,6 +13,7 @@ require 'gchart/meter'
 require 'gchart/line_xy'
 require 'gchart/url_builder'
 require 'gchart/query_builder'
+require 'gchart/image'
 require 'gchart/theme'
 require "net/http"
 require "net/https"
