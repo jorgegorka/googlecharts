@@ -7,9 +7,9 @@ module Gchart
     private
 
     def bar_presentation
-      if @overlapped
+      if overlapped
         'o'
-      elsif @grouped
+      elsif grouped
         'g'
       else
         's'

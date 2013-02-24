@@ -1,14 +1,15 @@
 ## Googlecharts
 
-# I am in the process of a big refactoring of this gem.  The [original gem](https://github.com/mattetti/googlecharts) hasn't been updated for a while.
+# I am in the process of a big refactoring of this gem.  The [original gem](https://github.com/mattetti/googlecharts) hasn't been updated for a while. (24/2/2013)
 
 [![Build Status](https://travis-ci.org/jorgegorka/googlecharts.png?branch=master)](https://travis-ci.org/jorgegorka/googlecharts)
+[![Code Climate](https://codeclimate.com/github/jorgegorka/googlecharts.png)](https://codeclimate.com/github/jorgegorka/googlecharts)
 
 The goal of this Gem is to make the creation of Google Charts a simple and easy task.
 
     require 'googlecharts'
 
-    new_graph = Gchart.Line.new(  :size => '200x300',
+    new_graph = Gchart:Line.new(  :size => '200x300',
                   :title => "example title",
                   :bg => 'efefef',
                   :legend => ['first data set label', 'second data set label'],
