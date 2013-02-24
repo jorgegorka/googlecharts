@@ -2,21 +2,13 @@ module Gchart
   class Gchart
     include GchartInfo
 
-    def self.url(use_ssl = false)
-      if use_ssl
-        'https://chart.googleapis.com/chart?'
-      else
-        'http://chart.apis.google.com/chart?'
-      end
-    end
-
     def self.types
       @types ||= ['line', 'line_xy', 'scatter', 'bar', 'venn', 'pie', 'pie_3d', 'jstize', 'sparkline', 'meter', 'map', 'radar']
     end
 
     def self.simple_chars
       @simple_chars ||= ('A'..'Z').to_a + ('a'..'z').to_a + ('0'..'9').to_a
-    end 
+    end
 
     def self.chars
       @chars ||= simple_chars + ['-', '.']
@@ -30,11 +22,17 @@ module Gchart
       'chart.png'
     end
 
-    attr_accessor :title, :type, :width, :height, :curved, :horizontal, :grouped, :overlapped, :legend, :legend_position, :labels, :data, :encoding, :bar_colors,
+    # temp container of chart object
+    attr_reader   :origin
+    #url builder
+    attr_reader   :link_builder
+    attr_reader   :qy_builder
+
+    attr_accessor :title, :type, :curved, :horizontal, :grouped, :overlapped, :legend, :legend_position, :labels, :data, :encoding, :bar_colors,
       :title_color, :title_size, :title_alignment, :custom, :axis_with_labels, :axis_labels, :bar_width_and_spacing, :id, :alt, :klass,
       :range_markers, :geographical_area, :map_colors, :country_codes, :axis_range, :filename, :min, :max, :colors, :usemap
 
-    attr_accessor :bg_type, :bg_color, :bg_angle, :chart_type, :chart_color, :chart_angle, :axis_range, :thickness, :new_markers, :grid_lines, :use_ssl
+    attr_accessor :bg_type, :bg_color, :bg_angle, :chart_type, :chart_color, :chart_angle, :axis_range, :thickness, :new_markers, :grid_lines
 
     attr_accessor :min_value, :max_value
 
@@ -66,6 +64,9 @@ module Gchart
 
     def initialize(options={}, origin='')
       @origin = origin
+      @link_builder  = UrlBuilder.new(options.delete(:use_ssl))
+      @qy_builder = QueryBuilder.new
+
       # Allow Gchart to take a theme too
       @theme = options[:theme]
       options = @theme ? Theme.load(@theme).to_options.merge(options) : options
@@ -73,15 +74,12 @@ module Gchart
 
       @type = options[:type] || 'line'
       @data = []
-      @width = 300
-      @height = 200
       @curved = false
       @horizontal = false
 
       @grouped = false
       @overlapped = false
 
-      @use_ssl = false
       @encoding = 'simple'
       # @max_value = 'auto'
       # @min_value defaults to nil meaning zero
@@ -104,12 +102,12 @@ module Gchart
 
     # Defines the Graph size using the following format:
     # width X height
-    def size=(size='300x200')
-      @width, @height = size.split("x").map { |dimension| dimension.to_i }
+    def size=(psize)
+      origin.size =  psize
     end
 
     def size
-      "#{width}x#{height}"
+      origin.size
     end
 
     def dimensions
@@ -243,13 +241,13 @@ module Gchart
 
     # Returns the chart's generated PNG as a blob. (borrowed from John's gchart.rubyforge.org)
     def fetch
-      url = URI.parse(self.class.url(use_ssl))
+      url = URI.parse(link_builder.url)
       req = Net::HTTP::Post.new(url.path)
       req.body = query_builder
       req.content_type = 'application/x-www-form-urlencoded'
       http = Net::HTTP.new(url.host, url.port)
-      http.verify_mode = OpenSSL::SSL::VERIFY_PEER if use_ssl
-      http.use_ssl = use_ssl
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER if link_builder.use_ssl
+      http.use_ssl = link_builder.use_ssl
       http.start {|resp| resp.request(req) }.body
     end
 
@@ -264,11 +262,11 @@ module Gchart
 
     def image_tag
       image = "<img"
-      image += " id=\"#{id}\"" if id  
-      image += " class=\"#{klass}\"" if klass      
+      image += " id=\"#{id}\"" if id
+      image += " class=\"#{klass}\"" if klass
       image += " src=\"#{url_builder(:html)}\""
-      image += " width=\"#{width}\""
-      image += " height=\"#{height}\""
+      image += " width=\"#{origin.width}\""
+      image += " height=\"#{origin.height}\""
       image += " alt=\"#{alt}\""
       image += " title=\"#{title}\"" if title
       image += " usemap=\"#{usemap}\"" if usemap
@@ -303,7 +301,7 @@ module Gchart
     end
 
     def set_size
-      "chs=#{size}"
+      origin.set_size
     end
 
     def set_data
@@ -315,7 +313,7 @@ module Gchart
       @bg_type = fill_type(bg_type) || 's' if bg_color
       @chart_type = fill_type(chart_type) || 's' if chart_color
 
-      "chf=" + {'bg' => fill_for(bg_type, bg_color, bg_angle), 'c' => fill_for(chart_type, chart_color, chart_angle)}.map{|k,v| "#{k},#{v}" unless v.nil?}.compact.join('|')      
+      "chf=" + {'bg' => fill_for(bg_type, bg_color, bg_angle), 'c' => fill_for(chart_type, chart_color, chart_angle)}.map{|k,v| "#{k},#{v}" unless v.nil?}.compact.join('|')
     end
 
     # set bar, line colors
@@ -383,21 +381,8 @@ module Gchart
       end
     end
 
-    # A chart can have one or many legends. 
-    # Gchart.line(:legend => 'label')
-    # or
-    # Gchart.line(:legend => ['first label', 'last label'])
     def set_legend
-      if type.to_s =~ /meter/
-        @labels = legend
-        return set_labels
-      end
-      if legend.is_a?(Array)
-        "chdl=#{@legend.map{|label| "#{CGI::escape(label.to_s)}"}.join('|')}"
-      else
-        "chdl=#{legend}"
-      end
-
+      origin.set_legend
     end
 
     def set_legend_position
@@ -490,20 +475,28 @@ module Gchart
     def set_type
       'cht=' + case type.to_s
       when 'line'
-        @origin.type
-      when 'line_xy'   then "lxy"
-      when 'pie_3d'    then "p3"
-      when 'pie'       then "p"
-      when 'venn'      then "v"
-      when 'scatter'   then "s"
-      when 'sparkline' then "ls"
-      when 'meter'     then "gom"
-      when 'map'       then "t"
+        origin.type
+      when 'linexy'
+        origin.type
+      when 'pie3d'
+        origin.type
+      when 'pie'
+        origin.type
+      when 'venn'
+        origin.type
+      when 'scatter'
+        origin.type
+      when 'sparkline'
+        origin.type
+      when 'meter'
+        origin.type
+      when 'map'
+        origin.type
       when 'radar'
-        "r" + (curved? ? 's' : '')
       when 'bar'
-        @origin.type
+        origin.type
       end
+      #"r" + (curved? ? 's' : '')
     end
 
     def fill_type(type)
@@ -632,24 +625,18 @@ module Gchart
     end
 
     def url_builder(options="")
-      self.class.url(use_ssl) + query_builder(options)
+      link_builder.url + query_builder(options)
     end
 
     def query_builder(options="")
       query_params = instance_variables.sort.map do |var|
         case var.to_s
-
         when '@data'
           set_data unless data == []
-          # Set the graph size
-        when '@width'
-          set_size unless width.nil? || height.nil?
         when '@type'
           set_type
         when '@title'
           set_title unless title.nil?
-        when '@legend'
-          set_legend unless legend.nil?
         when '@labels'
           set_labels unless labels.nil?
         when '@legend_position'
@@ -682,6 +669,9 @@ module Gchart
           custom
         end
       end.compact
+
+      query_params << set_size
+      query_params << set_legend
 
       query_params << set_axis_range
 
