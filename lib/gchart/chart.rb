@@ -8,7 +8,7 @@ module Gchart
       # Start with theme defaults if a theme is set
       theme = options[:theme]
       options = theme ? Theme.load(theme).to_options.merge(options) : options
-      # # Extract the format and optional filename, then clean the hash
+      # Extract the format and optional filename, then clean the hash
       @format = options[:format] || 'url'
       options[:filename] ||= default_filename
       options.delete(:format)
@@ -19,6 +19,8 @@ module Gchart
       params[:chdl]      = options.delete(:legend)
       params[:chs]       = self.size
       params[:chl]       = options.delete(:labels) if options[:labels]
+      params[:chtt]      = options.delete(:title).gsub(/\|/,"\n") if options[:title]
+      set_title_format(options.delete(:title_color), options.delete(:title_size), options.delete(:title_alignment))
       params[:chls]      = options.delete(:thickness) if options[:thickness]
       params[:chm]       = options.delete(:new_markers) if options[:new_markers]
       params[:chg]       = options.delete(:grid_lines) if options[:grid_lines]
@@ -61,6 +63,16 @@ module Gchart
       self.width, self.height = size.split("x").map { |dimension| dimension.to_i }
     end
 
+    # Writes the chart's generated PNG to a file. (borrowed from John's gchart.rubyforge.org)
+    def to_file(image_generator = Image.new)
+      image_generator.create
+    end
+
+    # generate an html <img /> with all image information
+    def image_tag(image_generator = Image.new)
+      image_generator.image_tag(set_image_options)
+    end
+
     private
 
     def default_filename
@@ -77,6 +89,33 @@ module Gchart
 
     def set_grouped(grouped=false)
       @grouped = grouped
+    end
+
+    def set_image_options
+      options = {
+        :id => 111,
+        :klass => 'Line',
+        :url => 'http://www.test.com/charts?some_params=333',
+        :width => width,
+        :height => height,
+        :alt    => params[:chdl],
+        :title  => 'A random title',
+        :usemap => 111
+      }
+    end
+
+    def set_title_format(color, size, alignment)
+      unless color.nil? and size.nil? and alignment.nil?
+        params[:chts] = "#{set_color(color)},#{size},#{set_alignment(alignment)}"
+      end
+    end
+
+    def set_color(color)
+      color.nil? ? '454545' : color
+    end
+
+    def set_alignment(alignment)
+      alignment.nil? ? 'c' : alignment
     end
   end
 end

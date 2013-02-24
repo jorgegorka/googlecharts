@@ -1,6 +1,6 @@
 ## Googlecharts
 
-# I am in the process of a big refactoring of this gem.  The [original gem](https://github.com/mattetti/googlecharts) hasn't been updated for a while. (24/2/2013)
+# I am in the process of a huge refactoring of this gem.  The [original gem](https://github.com/mattetti/googlecharts) hasn't been updated for a while. (24/2/2013)
 
 [![Build Status](https://travis-ci.org/jorgegorka/googlecharts.png?branch=master)](https://travis-ci.org/jorgegorka/googlecharts)
 [![Code Climate](https://codeclimate.com/github/jorgegorka/googlecharts.png)](https://codeclimate.com/github/jorgegorka/googlecharts)
